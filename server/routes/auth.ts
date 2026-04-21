@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { User, IUser, UserRole } from '../models/User';
-import { generateToken } from '../utils/auth';
+import { generateToken, authMiddleware } from '../utils/auth';
 
 const router = Router();
 
@@ -116,20 +116,10 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
 // Get current user
 router.get(
   '/me',
+  authMiddleware,
   async (req: Request & { user?: any }, res: Response): Promise<void> => {
     try {
-      const token = req.headers.authorization?.split(' ')[1];
-      if (!token) {
-        res.status(401).json({ message: 'No token provided' });
-        return;
-      }
-
-      const user = await User.findOne({ _id: req.user?.id || req.body.userId });
-      if (!user) {
-        res.status(404).json({ message: 'User not found' });
-        return;
-      }
-
+      const user = req.user;
       res.json({
         user: {
           id: user._id,
